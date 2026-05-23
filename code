@@ -1,0 +1,201 @@
+#include <SPI.h>
+#include <LoRa.h>
+#include "lcdgfx.h"
+#include <Wire.h>
+#include "SHTSensor.h"
+
+// ================= LORA =================
+#define SS 10
+#define RST 8
+#define DIO0 6
+
+// ================= BUZZER =================
+#define BUZZER_PIN 7
+
+// ================= ULTRASONIC =================
+#define TRIG_PIN 8
+#define ECHO_PIN 9
+
+// ================= OBJECTS =================
+SHTSensor sht;
+DisplaySSD1306_128x64_I2C display(-1);
+
+// ================= MEDICINE TIME =================
+#define MED_HOUR 14
+#define MED_MINUTE 51
+#define BUZZER_DURATION 10000
+
+// ================= TIME =================
+int hour = 14;
+int minute = 50;
+int second = 50;
+
+unsigned long lastMillis = 0;
+
+// ================= BUZZER =================
+bool buzzerActive = false;
+unsigned long buzzerStart = 0;
+
+// ================= DISTANCE =================
+long duration;
+float distance;
+
+// ================= MESSAGE =================
+char statusMsg[32] = "chargement...";
+
+// ================= OLED =================
+void showMessage(char *l1, char *l2) {
+  display.printFixed(0, 10, l1, STYLE_BOLD);
+  display.printFixed(0, 25, l2, STYLE_BOLD);
+}
+
+void showClock() {
+  char buffer[32];
+  snprintf(buffer, sizeof(buffer),
+           "Time %02d:%02d:%02d",
+           hour, minute, second);
+
+  display.printFixed(0, 40, buffer, STYLE_BOLD);
+}
+
+// ================= ULTRASONIC =================
+float getDistance() {
+
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+
+  digitalWrite(TRIG_PIN, LOW);
+
+  duration = pulseIn(ECHO_PIN, HIGH, 30000);
+
+  if (duration == 0) return -1;
+
+  return (duration * 0.0343) / 2;
+}
+
+// ================= LORA =================
+void envoyerMessage(String msg) {
+  LoRa.beginPacket();
+  LoRa.print(msg);
+  LoRa.endPacket();
+
+  Serial.println("LORA : " + msg);
+}
+
+// ================= SETUP =================
+void setup() {
+
+  Serial.begin(115200);
+  Wire.begin();
+
+  // OLED
+  display.begin();
+  display.clear();
+  display.setFixedFont(ssd1306xled_font6x8);
+
+  // SHT
+  sht.init();
+  sht.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
+
+  // LORA
+  LoRa.setPins(SS, RST, DIO0);
+
+  if (!LoRa.begin(868E6)) {
+    Serial.println("Erreur LoRa");
+    while (1);
+  }
+
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  Serial.println("System ready");
+}
+
+// ================= LOOP =================
+void loop() {
+
+  // ===== TIME =====
+  if (millis() - lastMillis >= 1000) {
+
+    lastMillis = millis();
+
+    second++;
+
+    if (second >= 60) { second = 0; minute++; }
+    if (minute >= 60) { minute = 0; hour++; }
+    if (hour >= 24) { hour = 0; }
+  }
+
+  // ===== SENSOR =====
+  sht.readSample();
+
+  float temp = sht.getTemperature();
+  float hum = sht.getHumidity();
+
+  distance = getDistance();
+
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+  // ================= MEDICINE TIME =================
+  if (hour == MED_HOUR &&
+      minute == MED_MINUTE &&
+      second < 5) {
+
+    if (!buzzerActive) {
+
+      buzzerActive = true;
+      buzzerStart = millis();
+
+      tone(BUZZER_PIN, 1000);
+
+      strcpy(statusMsg, "heure de prise");
+    }
+  }
+
+  // ================= USER DETECTED =================
+  if (buzzerActive &&
+      distance > 0 &&
+      distance < 30) {
+
+    Serial.println("USER DETECTED");
+
+    noTone(BUZZER_PIN);
+    buzzerActive = false;
+
+    strcpy(statusMsg, "OK");
+
+    envoyerMessage("Pris");
+  }
+
+  // ================= TIME OUT =================
+  if (buzzerActive &&
+      millis() - buzzerStart > BUZZER_DURATION) {
+
+    noTone(BUZZER_PIN);
+    buzzerActive = false;
+
+    strcpy(statusMsg, "Alerte");
+
+    envoyerMessage("Non pris");
+  }
+
+  // ================= DISPLAY =================
+  display.clear();
+
+  char line2[32];
+
+  snprintf(line2, sizeof(line2),
+           "T:%dC H:%d%%",
+           (int)temp,
+           (int)hum);
+
+  showMessage(statusMsg, line2);
+  showClock();
+
+  delay(100);
+}
