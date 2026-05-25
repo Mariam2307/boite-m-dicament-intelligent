@@ -1,0 +1,82 @@
+📦 Conception et Réalisation de la Boîte
+
+⸻
+
+🔧 Description Générale de la Boîte
+
+La boîte a été conçue et réalisée en bois à l’aide du logiciel xTool Creative Space.
+Elle représente l’enclos physique du projet électronique « Boîte à médicaments », permettant d’intégrer l’ensemble des composants électroniques de manière organisée, propre et esthétique.
+
+La structure de la boîte est composée de deux étages distincts :
+      •     Étage inférieur : destiné à accueillir les composants électroniques (Arduino, câbles, modules, alimentation…)
+      •     Étage supérieur : réservé au stockage des médicaments, facilement accessible grâce à un couvercle amovible
+
+Cette séparation permet une organisation claire entre la partie technique et la partie fonctionnelle du projet.
+
+⸻
+
+🧩 Étapes de Réalisation
+      •     Conception complète de la boîte sur xTool Creative Space
+      •     Création des différentes pièces adaptées à la découpe laser
+      •     Exportation des fichiers de découpe en plusieurs parties
+
+Une seconde exportation a été nécessaire à cause de la limite de surface de travail du logiciel.
+
+      •     Découpe laser des différentes pièces en bois
+      •     Assemblage manuel de la structure avec système Finger Joint
+      •     Intégration des composants électroniques dans l’étage inférieur
+      •     Ajout des ouvertures nécessaires pour les composants externes
+
+⸻
+
+📐 Pourquoi le Projet a été Exporté Deux Fois ?
+
+Le plan de découpe a été exporté en deux fichiers séparés car la surface de travail du logiciel xTool Creative Space ne permettait pas de placer toutes les pièces de la boîte simultanément.
+
+La fabrication a donc été réalisée en deux sessions de découpe laser distinctes afin d’intégrer la totalité des éléments nécessaires à la construction finale de la boîte.
+
+⸻
+
+🛠️ Caractéristiques Techniques de la Boîte
+
+⸻
+
+✨ Gravure Laser
+
+Le couvercle comporte une gravure laser décorative et professionnelle entourée d’un double rectangle.
+
+La gravure affiche le texte :
+
+« Boîte à médicaments / Projet électronique »
+
+L’écriture cursive a été gravée directement sur le bois afin d’obtenir un rendu esthétique et personnalisé.
+
+⸻
+
+🧱 Encoches Finger Joint
+
+Les différentes parois de la boîte utilisent un système d’assemblage Finger Joint.
+
+Chaque côté a été découpé avec précision au laser afin de permettre :
+      •     un emboîtement solide,
+      •     une meilleure stabilité,
+      •     un assemblage propre sans utilisation de vis ni de colle.
+
+⸻
+
+🔌 Découpes pour les Composants
+
+La boîte contient plusieurs ouvertures spécialement conçues pour intégrer les composants électroniques :
+      •     Deux trous circulaires pour le capteur ultrasonique
+      •     Une découpe rectangulaire destinée à l’écran OLED
+      •     Un petit trou circulaire pour le buzzer
+      •     Une languette intégrée au couvercle pour faciliter l’ouverture
+
+⸻
+
+📝 Documents & Outils de Suivi
+      •     Réalisation des plans de découpe sur xTool Creative Space
+      •     Organisation des fichiers du projet
+      •     Préparation des documents techniques du projet
+      •     Création et mise à jour du dépôt GitHub
+      •     Documentation des étapes de fabrication et d’assemblage
