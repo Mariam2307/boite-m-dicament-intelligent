@@ -13,8 +13,8 @@
 #define BUZZER_PIN 7
 
 // ================= ULTRASONIC =================
-#define TRIG_PIN 8
-#define ECHO_PIN 9
+#define TRIG_PIN 2
+#define ECHO_PIN 3
 
 // ================= OBJECTS =================
 SHTSensor sht;
@@ -45,12 +45,15 @@ char statusMsg[32] = "chargement...";
 
 // ================= OLED =================
 void showMessage(char *l1, char *l2) {
+
   display.printFixed(0, 10, l1, STYLE_BOLD);
   display.printFixed(0, 25, l2, STYLE_BOLD);
 }
 
 void showClock() {
+
   char buffer[32];
+
   snprintf(buffer, sizeof(buffer),
            "Time %02d:%02d:%02d",
            hour, minute, second);
@@ -73,16 +76,18 @@ float getDistance() {
 
   if (duration == 0) return -1;
 
-  return (duration * 0.0343) / 2;
+  return (duration * 0.0343) / 2.0;
 }
 
 // ================= LORA =================
 void envoyerMessage(String msg) {
+
   LoRa.beginPacket();
   LoRa.print(msg);
   LoRa.endPacket();
 
-  Serial.println("LORA : " + msg);
+  Serial.print("LORA : ");
+  Serial.println(msg);
 }
 
 // ================= SETUP =================
@@ -100,10 +105,11 @@ void setup() {
   sht.init();
   sht.setAccuracy(SHTSensor::SHT_ACCURACY_MEDIUM);
 
-  // LORA
+  // LoRa
   LoRa.setPins(SS, RST, DIO0);
 
   if (!LoRa.begin(868E6)) {
+
     Serial.println("Erreur LoRa");
     while (1);
   }
@@ -118,73 +124,89 @@ void setup() {
 // ================= LOOP =================
 void loop() {
 
-  // ===== TIME =====
+  // ===== CLOCK =====
   if (millis() - lastMillis >= 1000) {
 
     lastMillis = millis();
 
     second++;
 
-    if (second >= 60) { second = 0; minute++; }
-    if (minute >= 60) { minute = 0; hour++; }
-    if (hour >= 24) { hour = 0; }
-  }
+    if (second >= 60) {
+      second = 0;
+      minute++;
+    }
 
-  // ===== SENSOR =====
-  sht.readSample();
+    if (minute >= 60) {
+      minute = 0;
+      hour++;
+    }
 
-  float temp = sht.getTemperature();
-  float hum = sht.getHumidity();
-
-  distance = getDistance();
-
-  Serial.print("Distance: ");
-  Serial.println(distance);
-
-  // ================= MEDICINE TIME =================
-  if (hour == MED_HOUR &&
-      minute == MED_MINUTE &&
-      second < 5) {
-
-    if (!buzzerActive) {
-
-      buzzerActive = true;
-      buzzerStart = millis();
-
-      tone(BUZZER_PIN, 1000);
-
-      strcpy(statusMsg, "heure de prise");
+    if (hour >= 24) {
+      hour = 0;
     }
   }
 
-  // ================= USER DETECTED =================
+  // ===== SENSORS =====
+  sht.readSample();
+
+  float temp = sht.getTemperature();
+  float hum  = sht.getHumidity();
+
+  distance = getDistance();
+
+  Serial.print("Distance : ");
+  Serial.println(distance);
+
+  // ================= HEURE DE PRISE =================
+  if (hour == MED_HOUR &&
+      minute == MED_MINUTE &&
+      second < 5 &&
+      !buzzerActive) {
+
+    buzzerActive = true;
+    buzzerStart = millis();
+
+    tone(BUZZER_PIN, 1000);
+
+    strcpy(statusMsg, "Heure prise");
+
+    Serial.println("BUZZER ON");
+  }
+
+  // ================= UTILISATEUR DETECTE =================
   if (buzzerActive &&
       distance > 0 &&
       distance < 30) {
-
-    Serial.println("USER DETECTED");
 
     noTone(BUZZER_PIN);
     buzzerActive = false;
 
     strcpy(statusMsg, "OK");
 
+    Serial.println("USER DETECTED");
+    Serial.println("MEDICAMENT PRIS");
+
+    // LORA
     envoyerMessage("Pris");
   }
 
-  // ================= TIME OUT =================
+  // ================= TIMEOUT =================
   if (buzzerActive &&
-      millis() - buzzerStart > BUZZER_DURATION) {
+      millis() - buzzerStart >= BUZZER_DURATION) {
 
     noTone(BUZZER_PIN);
     buzzerActive = false;
 
     strcpy(statusMsg, "Alerte");
 
+    Serial.println("TIMEOUT");
+    Serial.println("MEDICAMENT NON PRIS");
+
+    // LORA
     envoyerMessage("Non pris");
   }
 
-  // ================= DISPLAY =================
+  // ================= OLED =================
   display.clear();
 
   char line2[32];
