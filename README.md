@@ -5,6 +5,10 @@ du médicament et arrêter l’alarme, tandis que le capteur DHT22 surveille la 
 Enfin, le module LoRa assure la communication sans fil et la transmission des données à longue distance.
 
 
+![image alt](image_url)
+
+
+
 
 
 
