@@ -6,14 +6,13 @@
 #define RST 8
 #define DIO0 6
 
+// ================= SETUP =================
 void setup() {
 
   Serial.begin(115200);
-  while (!Serial);
 
   Serial.println("Recepteur LoRa");
 
-  // Initialisation LoRa
   LoRa.setPins(SS, RST, DIO0);
 
   if (!LoRa.begin(868E6)) {
@@ -26,6 +25,7 @@ void setup() {
   Serial.println("En attente...");
 }
 
+// ================= LOOP =================
 void loop() {
 
   int packetSize = LoRa.parsePacket();
@@ -34,37 +34,30 @@ void loop() {
 
     String message = "";
 
-    // Lecture message LoRa
     while (LoRa.available()) {
       message += (char)LoRa.read();
     }
 
     message.trim();
 
-    // Ignore message parasite UCA21
+    // Ignore message parasite
     if (message == "DEMANDE_ENTREE") {
       return;
     }
 
-    Serial.print("Message recu : ");
-    Serial.println(message);
-
     // ===== Analyse =====
-    if (message == "Pris") {
+    if (message.indexOf("Pris") >= 0 &&
+        message.indexOf("Non") < 0) {
 
       Serial.println("MEDICAMENT PRIS");
+      Serial.println("----------------");
     }
 
-    else if (message == "Non pris") {
+    else if (message.indexOf("Non pris") >= 0 ||
+             message.indexOf("NON") >= 0) {
 
       Serial.println("MEDICAMENT NON PRIS");
+      Serial.println("----------------");
     }
-
-    else {
-
-      Serial.println("Message inconnu");
-    }
-
-    Serial.println("----------------");
   }
 }
